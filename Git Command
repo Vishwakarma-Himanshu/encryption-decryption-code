@@ -1,1 +1,19 @@
+git init (to initialize git repository)
 
+git status (to check status)
+
+git add . (to add files befiore commit '.' means to add all files, '*' means to ignore settings file mentioned in gitignore file)
+
+git status (just to confirm status)
+
+git commit -m 'any commet for understanding' (for local commit)
+
+incase to add email & username (for initial one time)
+
+git branch -M DEV (to change branch)
+
+git remote add origin 'git repository url' (url of your git repository)
+
+git push -f -u orgin 'branch name' (to push your latest code)
+
+git log (to check history activity)
