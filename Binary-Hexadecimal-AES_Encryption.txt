@@ -1,0 +1,97 @@
+package com.bbps.utility;
+
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+public class BinaryDecimalConversion {
+
+	public static String encryptMessageGH(String message, String password) throws Exception {
+	    MessageDigest sha = MessageDigest.getInstance("SHA-256");
+	    byte[] key = sha.digest(password.getBytes("UTF-8"));
+	    SecretKeySpec aesKey = new SecretKeySpec(key, "AES");
+	    byte[] iv = new byte[16];
+	    new SecureRandom().nextBytes(iv);
+	    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+	    cipher.init(Cipher.ENCRYPT_MODE, aesKey, new IvParameterSpec(iv));
+	    byte[] ciphertext = cipher.doFinal(message.getBytes());
+	    byte[] encrypted = new byte[iv.length + ciphertext.length];
+	    System.arraycopy(iv, 0, encrypted, 0, iv.length);
+	    System.arraycopy(ciphertext, 0, encrypted, iv.length, ciphertext.length);
+	    return Base64.getEncoder().encodeToString(encrypted);
+	}
+	
+	public static String decryptMessageGH(String encryptedMessage, String password) throws Exception {
+	    MessageDigest sha = MessageDigest.getInstance("SHA-256");
+	    byte[] key = sha.digest(password.getBytes("UTF-8"));
+	    SecretKeySpec aesKey = new SecretKeySpec(key, "AES");
+	    byte[] encrypted = Base64.getDecoder().decode(encryptedMessage);
+	    byte[] iv = new byte[16];
+	    System.arraycopy(encrypted, 0, iv, 0, iv.length);
+	    byte[] ciphertext = new byte[encrypted.length - iv.length];
+	    System.arraycopy(encrypted, iv.length, ciphertext, 0, ciphertext.length);
+	    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+	    cipher.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(iv));
+	    return new String(cipher.doFinal(ciphertext), "UTF-8");
+	}
+	
+	public static void main(String[] args) throws Exception {
+		String input = "IFSC Code: UTBI0001620@@@**&%";
+		System.out.println("Message: "+input);
+		
+		//convert message into binary
+		StringBuilder sb = new StringBuilder();
+		char[] chars = input.toCharArray();
+		for (char c : chars) {
+		    String binary = Integer.toBinaryString(c);
+		    String formatted = String.format("%8s", binary);
+		    String output = formatted.replaceAll(" ", "0");
+		    sb.append(output);
+		    sb.append(" ");
+		}
+		String testString = new String(sb);
+		System.out.println("Encrypt Binary Conversion: "+testString);
+		//convert binary into hexadecimal
+		StringBuilder sb1 = new StringBuilder();
+		char ch[] = testString.toCharArray();
+	      for(int i = 0; i < ch.length; i++) {
+	         String hexString = Integer.toHexString(ch[i]);
+	         sb1.append(hexString);
+	      }
+	    String testHexadecimal = new String(sb1);
+		System.out.println("Encrypt Hexadecimal Conversion: "+testHexadecimal);
+		
+		//convert hexadecimal with secret key to AES encrypted message
+		String encrypt = BinaryDecimalConversion.encryptMessageGH(testHexadecimal, "Idbi1964");
+		System.out.println("Encrypted AES Message: "+encrypt);
+		
+		//convert AES encrypted message to hexadecimal message
+		String decrypt = BinaryDecimalConversion.decryptMessageGH(encrypt, "Idbi1964");
+		System.out.println("Decrypt Hexadecimal Conversion: "+decrypt);
+		
+		//convert hexadecimal to binary
+		String result = new String();
+	    char[] charArray = decrypt.toCharArray();
+	    for(int i = 0; i < charArray.length; i=i+2) {
+	       String st = ""+charArray[i]+""+charArray[i+1];
+	       char ch1 = (char)Integer.parseInt(st, 16);
+	       result = result + ch1;
+	    }
+	    System.out.println("Decrypt Binary Conversion: "+result);
+		
+	    //convert binary to message
+		String[] parts = result.split(" ");
+		StringBuilder sb3 = new StringBuilder();
+		for (String part : parts) {
+		    int val = Integer.parseInt(part, 2);
+		    String c = Character.toString(val);
+		    sb3.append(c);
+		}
+		System.out.println("Decrypted message: "+sb3);
+	}
+
+}
